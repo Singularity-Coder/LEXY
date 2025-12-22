@@ -60,6 +60,7 @@ export const PROFICIENCY_LEVELS: LevelInfo[] = [
 ];
 
 export const DUMMY_COURSE: CourseData = {
+  id: "default-english",
   courseTitle: "English Mastery",
   language: "English",
   units: [
@@ -81,92 +82,19 @@ export const DUMMY_COURSE: CourseData = {
               question: "How do you say 'Hello'?",
               options: ["Hello", "Goodbye", "Thank you", "Please"],
               answer: "Hello"
-            },
-            {
-              id: "ex-2",
-              type: "word-sort",
-              question: "Assemble the sentence: 'Hello, how are you?'",
-              wordBank: ["Hello,", "how", "are", "you?", "goodbye"],
-              answer: "Hello, how are you?"
             }
           ]
         }
       ]
-    },
-    {
-      id: "unit-2",
-      title: "The Marketplace",
-      color: "bg-[#1cb0f6]",
-      level: 2,
-      lessons: [
-        {
-          id: "lesson-3",
-          title: "Buying Groceries",
-          description: "Basic shopping phrases",
-          status: 'locked',
-          exercises: []
-        }
-      ]
-    },
-    {
-      id: "unit-3",
-      title: "Office Basics",
-      color: "bg-[#ce82ff]",
-      level: 3,
-      lessons: [
-        {
-          id: "lesson-4",
-          title: "Meeting Colleagues",
-          description: "Professional introductions",
-          status: 'locked',
-          exercises: []
-        }
-      ]
-    },
-    {
-      id: "unit-4",
-      title: "Business Negotiations",
-      color: "bg-[#ff9600]",
-      level: 4,
-      lessons: [
-        {
-          id: "lesson-5",
-          title: "Pitching Ideas",
-          description: "Advanced persuasive language",
-          status: 'locked',
-          exercises: []
-        }
-      ]
-    },
-    {
-      id: "unit-5",
-      title: "Research Ethics",
-      color: "bg-[#4b4b4b]",
-      level: 5,
-      lessons: [
-        {
-          id: "lesson-6",
-          title: "Critical Analysis",
-          description: "Writing formal abstracts",
-          status: 'locked',
-          exercises: []
-        }
-      ]
-    },
-    {
-      id: "unit-6",
-      title: "Deep Philosophy",
-      color: "bg-[#1cb0f6]",
-      level: 6,
-      lessons: [
-        {
-          id: "lesson-7",
-          title: "Inner Monologue",
-          description: "Thinking naturally in the target language",
-          status: 'locked',
-          exercises: []
-        }
-      ]
     }
+  ],
+  dictionary: [
+    { id: 'w1', word: 'Hello', translation: 'Hola', definition: 'A common greeting used to begin a conversation.', example: 'Hello, how are you today?' },
+    { id: 'w2', word: 'Apple', translation: 'Manzana', definition: 'A round fruit with red or green skin.', example: 'She ate a sweet red apple.' },
+    { id: 'w3', word: 'Library', translation: 'Biblioteca', definition: 'A place where books are kept for people to read or borrow.', example: 'I went to the library to study.' }
+  ],
+  grammar: [
+    { id: 'g1', title: 'Present Simple', content: 'Use the present simple to talk about things that are generally true or happen regularly.', examples: ['I drink coffee every morning.', 'She lives in London.'] },
+    { id: 'g2', title: 'Personal Pronouns', content: 'Words used to replace nouns like people or things.', examples: ['I, You, He, She, It, We, They'] }
   ]
 };

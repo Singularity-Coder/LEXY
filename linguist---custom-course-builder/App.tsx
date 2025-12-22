@@ -6,6 +6,7 @@ import UploadManager from './components/UploadManager';
 import LessonSession from './components/LessonSession';
 import ReviewMode from './components/ReviewMode';
 import VocabularyView from './components/VocabularyView';
+import GrammarView from './components/GrammarView';
 import WritingPad from './components/WritingPad';
 import CultureView from './components/CultureView';
 import SettingsView from './components/SettingsView';
@@ -13,7 +14,11 @@ import { CourseData, Lesson, UserStats, Exercise, ProficiencyLevel } from './typ
 import { DUMMY_COURSE } from './constants';
 
 const App: React.FC = () => {
-  const [activeView, setActiveView] = useState<'home' | 'settings' | 'profile' | 'vocabulary' | 'review' | 'writing' | 'culture'>('home');
+  const [activeView, setActiveView] = useState<'home' | 'settings' | 'profile' | 'vocabulary' | 'review' | 'writing' | 'culture' | 'grammar'>('home');
+  const [availableCourses, setAvailableCourses] = useState<CourseData[]>(() => {
+    const saved = localStorage.getItem('linguist_courses_v2');
+    return saved ? JSON.parse(saved) : [DUMMY_COURSE];
+  });
   const [course, setCourse] = useState<CourseData>(DUMMY_COURSE);
   const [mediaMap, setMediaMap] = useState<Map<string, string>>(new Map());
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
@@ -27,6 +32,8 @@ const App: React.FC = () => {
     gems: 100,
     lastActiveDate: new Date().toISOString(),
     failedExercises: [],
+    savedWordIds: {},
+    currentCourseId: DUMMY_COURSE.id,
     achievements: [
       { id: '1', title: 'Early Bird', description: 'Complete a lesson before 9AM', icon: '☀️', requirement: 1, currentValue: 0, unlocked: false },
       { id: '2', title: 'XP Titan', description: 'Reach 1000 Total XP', icon: '⚡', requirement: 1000, currentValue: 0, unlocked: false },
@@ -35,17 +42,45 @@ const App: React.FC = () => {
   };
 
   const [stats, setStats] = useState<UserStats>(() => {
-    const saved = localStorage.getItem('linguist_stats_v2');
+    const saved = localStorage.getItem('linguist_stats_v3');
     return saved ? JSON.parse(saved) : INITIAL_STATS;
   });
 
   useEffect(() => {
-    localStorage.setItem('linguist_stats_v2', JSON.stringify(stats));
+    localStorage.setItem('linguist_stats_v3', JSON.stringify(stats));
   }, [stats]);
 
+  useEffect(() => {
+    localStorage.setItem('linguist_courses_v2', JSON.stringify(availableCourses));
+  }, [availableCourses]);
+
+  // Sync active course when stats.currentCourseId changes
+  useEffect(() => {
+    const active = availableCourses.find(c => c.id === stats.currentCourseId);
+    if (active) setCourse(active);
+  }, [stats.currentCourseId, availableCourses]);
+
   const handleCourseLoaded = (newCourse: CourseData, newMediaMap: Map<string, string>) => {
-    setCourse(newCourse);
+    // Generate a unique ID if not present
+    const courseWithId = { ...newCourse, id: newCourse.id || `course-${Date.now()}` };
+    
+    setAvailableCourses(prev => {
+      const exists = prev.findIndex(c => c.id === courseWithId.id);
+      if (exists !== -1) {
+        const updated = [...prev];
+        updated[exists] = courseWithId;
+        return updated;
+      }
+      return [...prev, courseWithId];
+    });
+
+    setStats(prev => ({ ...prev, currentCourseId: courseWithId.id }));
     setMediaMap(newMediaMap);
+    setActiveView('home');
+  };
+
+  const handleCourseSwitch = (courseId: string) => {
+    setStats(prev => ({ ...prev, currentCourseId: courseId }));
     setActiveView('home');
   };
 
@@ -55,42 +90,59 @@ const App: React.FC = () => {
 
   const handleUpdateProficiency = (newLevel: ProficiencyLevel) => {
     setStats(prev => ({ ...prev, proficiencyLevel: newLevel }));
-    // In a real app, we might want to auto-scroll to the first unit of this level
     setActiveView('home');
+  };
+
+  const handleToggleSaveWord = (wordId: string) => {
+    setStats(prev => {
+      const language = course.language;
+      const currentSaved = prev.savedWordIds[language] || [];
+      const newSaved = currentSaved.includes(wordId)
+        ? currentSaved.filter(id => id !== wordId)
+        : [...currentSaved, wordId];
+      
+      return {
+        ...prev,
+        savedWordIds: {
+          ...prev.savedWordIds,
+          [language]: newSaved
+        }
+      };
+    });
   };
 
   const handleResetProgress = () => {
     setStats(INITIAL_STATS);
-    const resetCourse = JSON.parse(JSON.stringify(DUMMY_COURSE));
-    resetCourse.units.forEach((unit: any) => {
-      unit.lessons.forEach((l: any, idx: number) => {
-        l.status = (unit.id === 'unit-1' && idx === 0) ? 'available' : 'locked';
-      });
-    });
-    setCourse(resetCourse);
+    setAvailableCourses([DUMMY_COURSE]);
     setActiveView('home');
   };
 
   const handleFinishLesson = (xpGained: number, mistakes: Exercise[]) => {
-    const updatedCourse = { ...course };
-    updatedCourse.units.forEach(unit => {
-      unit.lessons.forEach((l, idx) => {
-        if (l.id === activeLesson?.id) {
-          l.status = 'completed';
-          if (unit.lessons[idx + 1]) unit.lessons[idx + 1].status = 'available';
+    setAvailableCourses(prevCourses => {
+      return prevCourses.map(c => {
+        if (c.id === course.id) {
+          const updatedCourse = { ...c };
+          updatedCourse.units.forEach(unit => {
+            unit.lessons.forEach((l, idx) => {
+              if (l.id === activeLesson?.id) {
+                l.status = 'completed';
+                if (unit.lessons[idx + 1]) unit.lessons[idx + 1].status = 'available';
+              }
+            });
+          });
+          return updatedCourse;
         }
+        return c;
       });
     });
 
     setStats(prev => {
       const newXp = prev.xp + xpGained;
       const newLevel = Math.floor(newXp / 1000) + 1;
-      
       const updatedAchievements = prev.achievements.map(a => {
         if (a.id === '2') return { ...a, currentValue: newXp, unlocked: newXp >= a.requirement };
         return a;
       });
-
       return { 
         ...prev, 
         xp: newXp, 
@@ -100,11 +152,9 @@ const App: React.FC = () => {
       };
     });
 
-    setCourse(updatedCourse);
     setActiveLesson(null);
   };
 
-  // Filter course material based on chosen level
   const filteredUnits = course.units.filter(u => !u.level || u.level === stats.proficiencyLevel);
 
   return (
@@ -114,6 +164,7 @@ const App: React.FC = () => {
         activeView={activeView} 
         xp={stats.xp} 
         proficiencyLevel={stats.proficiencyLevel}
+        currentLanguage={course.language}
       />
 
       <main className="flex-1 md:ml-64 relative">
@@ -144,15 +195,25 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {activeView === 'vocabulary' && <VocabularyView />}
+        {activeView === 'vocabulary' && (
+          <VocabularyView 
+            dictionary={course.dictionary} 
+            savedWordIds={stats.savedWordIds[course.language] || []}
+            onToggleSave={handleToggleSaveWord}
+          />
+        )}
+        {activeView === 'grammar' && <GrammarView lessons={course.grammar} />}
         {activeView === 'writing' && <WritingPad />}
         {activeView === 'culture' && <CultureView />}
         {activeView === 'settings' && (
           <SettingsView 
+            availableCourses={availableCourses}
+            onCourseSwitch={handleCourseSwitch}
             onCourseLoaded={handleCourseLoaded} 
             onResetProgress={handleResetProgress}
             currentProficiency={stats.proficiencyLevel}
             onUpdateProficiency={handleUpdateProficiency}
+            currentCourseId={stats.currentCourseId}
           />
         )}
         {activeView === 'review' && <ReviewMode exercises={stats.failedExercises} onClose={() => setActiveView('home')} />}
@@ -165,7 +226,6 @@ const App: React.FC = () => {
                 <h2 className="text-4xl font-black">Learner Lvl {stats.level}</h2>
               </div>
             </div>
-
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[{v: stats.streak, l: 'STREAK', i: '🔥'}, {v: stats.xp, l: 'TOTAL XP', i: '⚡'}, {v: stats.level, l: 'LEVEL', i: '🏆'}, {v: stats.gems, l: 'GEMS', i: '💎'}].map((s, i) => (
                 <div key={i} className="duo-card p-6 flex flex-col items-center">

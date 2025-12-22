@@ -1,40 +1,82 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ALPHABET } from '../constants';
+import { DictionaryEntry } from '../types';
 
-const VocabularyView: React.FC = () => {
+interface VocabularyViewProps {
+  dictionary?: DictionaryEntry[];
+  savedWordIds: string[];
+  onToggleSave: (wordId: string) => void;
+}
+
+const VocabularyView: React.FC<VocabularyViewProps> = ({ dictionary = [], savedWordIds, onToggleSave }) => {
+  const [activeTab, setActiveTab] = useState<'alphabet' | 'dictionary' | 'saved'>('alphabet');
+  const [searchTerm, setSearchTerm] = useState("");
+  
   const vowels = ['A', 'E', 'I', 'O', 'U'];
   const consonants = ALPHABET.filter(letter => !vowels.includes(letter));
 
-  const speak = (letter: string) => {
-    const utterance = new SpeechSynthesisUtterance(letter);
+  const speak = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
-    // Slightly adjust pitch/rate for clarity if needed
-    utterance.pitch = 1;
-    utterance.rate = 0.9;
-    window.speechSynthesis.cancel(); // Stop current speech before starting new one
+    window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
+  };
+
+  const filteredDict = dictionary.filter(entry => 
+    entry.word.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    entry.translation.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const savedWords = dictionary.filter(entry => savedWordIds.includes(entry.id));
+
+  const renderWordCard = (entry: DictionaryEntry) => {
+    const isSaved = savedWordIds.includes(entry.id);
+    return (
+      <div key={entry.id} className="duo-card p-6 bg-white hover:border-[#1cb0f6] transition-all flex flex-col group">
+        <div className="flex justify-between items-start mb-4">
+          <div className="space-y-1">
+            <h3 className="text-2xl font-black text-gray-800">{entry.word}</h3>
+            <p className="text-lg font-bold text-[#1cb0f6]">{entry.translation}</p>
+          </div>
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => speak(entry.word)}
+              className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors"
+            >
+              🔊
+            </button>
+            <button 
+              onClick={() => onToggleSave(entry.id)}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                isSaved ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-50 text-gray-300 hover:text-yellow-600'
+              }`}
+            >
+              {isSaved ? '★' : '☆'}
+            </button>
+          </div>
+        </div>
+        {entry.definition && <p className="text-sm text-gray-500 font-bold mb-3 line-clamp-2">{entry.definition}</p>}
+        {entry.example && (
+          <div className="mt-auto pt-4 border-t border-gray-100">
+            <p className="text-xs text-gray-400 italic">"{entry.example}"</p>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const LetterButton = ({ letter, type }: { letter: string; type: 'vowel' | 'consonant' }) => {
     const activeColors = type === 'vowel' 
       ? 'hover:border-[#ffc800] hover:bg-[#fff9e6] group-hover:text-[#ffc800]' 
       : 'hover:border-[#1cb0f6] hover:bg-[#ddf4ff] group-hover:text-[#1cb0f6]';
-    
-    const iconColors = type === 'vowel'
-      ? 'group-hover:bg-[#ffc800] group-hover:text-white'
-      : 'group-hover:bg-[#84d8ff] group-hover:text-white';
-
-    const borderColors = type === 'vowel' ? 'hover:border-[#ffc800]' : 'hover:border-[#1cb0f6]';
-
     return (
       <button
-        key={letter}
         onClick={() => speak(letter)}
-        className={`group duo-card p-6 flex flex-col items-center justify-center space-y-3 transition-all transform active:scale-95 ${activeColors} ${borderColors}`}
+        className={`group duo-card p-5 flex flex-col items-center justify-center space-y-3 transition-all transform active:scale-95 ${activeColors}`}
       >
-        <span className={`text-5xl font-black text-gray-800 transition-colors`}>{letter}</span>
-        <div className={`w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl shadow-inner transition-colors ${iconColors}`}>
+        <span className="text-4xl font-black text-gray-800">{letter}</span>
+        <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-sm shadow-inner transition-colors">
           🔊
         </div>
       </button>
@@ -42,55 +84,103 @@ const VocabularyView: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-10 px-6 space-y-16 animate-in fade-in slide-in-from-bottom duration-500">
-      <div className="text-center space-y-4">
-        <h1 className="text-5xl font-black text-gray-800 tracking-tight">Alphabet Explorer</h1>
-        <p className="text-xl text-gray-500 font-bold max-w-2xl mx-auto leading-relaxed">
-          Master the building blocks of English. Tap any letter to hear its core sound.
-        </p>
-      </div>
-
-      {/* Vowels Section */}
-      <section className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-2xl font-black text-gray-700 uppercase tracking-widest">The Vowels</h2>
-          <div className="h-1 flex-1 bg-yellow-100 rounded-full"></div>
-          <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-black uppercase">Core Sounds</span>
+    <div className="max-w-6xl mx-auto py-10 px-6 space-y-10 animate-in fade-in duration-500 pb-32">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-gray-100 pb-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-black text-gray-800">Vocabulary</h1>
+          <p className="text-gray-500 font-bold">Build your repertoire word by word.</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
-          {vowels.map((letter) => (
-            <LetterButton key={letter} letter={letter} type="vowel" />
+        
+        <div className="flex p-1 bg-gray-100 rounded-2xl">
+          {[
+            { id: 'alphabet', label: 'Alphabet', icon: '🔤' },
+            { id: 'dictionary', label: 'Dictionary', icon: '📖' },
+            { id: 'saved', label: 'My Words', icon: '★' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-black text-xs uppercase transition-all ${
+                activeTab === tab.id 
+                  ? 'bg-white text-[#1cb0f6] shadow-sm' 
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
           ))}
         </div>
-        <p className="text-sm text-gray-400 font-bold italic">Vowels are the breath of language. Every English word contains at least one!</p>
-      </section>
-
-      {/* Consonants Section */}
-      <section className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-2xl font-black text-gray-700 uppercase tracking-widest">The Consonants</h2>
-          <div className="h-1 flex-1 bg-blue-100 rounded-full"></div>
-          <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-black uppercase">Structure</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-          {consonants.map((letter) => (
-            <LetterButton key={letter} letter={letter} type="consonant" />
-          ))}
-        </div>
-      </section>
-
-      <div className="duo-card p-10 bg-gradient-to-r from-[#1cb0f6]/5 to-[#1cb0f6]/10 border-[#84d8ff] flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
-        <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center text-5xl shadow-lg border-2 border-[#1cb0f6]/20">
-          🎓
-        </div>
-        <div className="flex-1 text-center md:text-left">
-          <h3 className="text-2xl font-black text-blue-800 mb-2">Did You Know?</h3>
-          <p className="text-blue-600 font-bold text-lg leading-relaxed">
-            While there are only 26 letters in the alphabet, they can create over 40 distinct sounds! 
-            The letter <span className="underline decoration-wavy">Y</span> is a "semi-vowel" because it can act as both a vowel (like in "sky") and a consonant (like in "yellow").
-          </p>
-        </div>
       </div>
+
+      {activeTab === 'alphabet' && (
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom duration-300">
+           <section className="space-y-6">
+            <h2 className="text-2xl font-black text-gray-700 uppercase tracking-widest flex items-center gap-3">
+              <span className="w-2 h-8 bg-yellow-400 rounded-full" /> Vowels
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
+              {vowels.map((letter) => <LetterButton key={letter} letter={letter} type="vowel" />)}
+            </div>
+          </section>
+          <section className="space-y-6">
+            <h2 className="text-2xl font-black text-gray-700 uppercase tracking-widest flex items-center gap-3">
+              <span className="w-2 h-8 bg-[#1cb0f6] rounded-full" /> Consonants
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+              {consonants.map((letter) => <LetterButton key={letter} letter={letter} type="consonant" />)}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {activeTab === 'dictionary' && (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom duration-300">
+          <div className="relative">
+            <input 
+              type="text"
+              placeholder="Search words..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-5 pl-14 duo-card text-lg font-bold outline-none focus:border-[#1cb0f6] shadow-inner bg-gray-50"
+            />
+            <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl text-gray-400">🔍</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredDict.length > 0 ? (
+              filteredDict.map(renderWordCard)
+            ) : (
+              <div className="col-span-full py-20 text-center space-y-4">
+                <span className="text-6xl">🏜️</span>
+                <p className="text-xl font-black text-gray-300 uppercase tracking-widest">No words found</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'saved' && (
+        <div className="animate-in fade-in slide-in-from-bottom duration-300">
+          {savedWords.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {savedWords.map(renderWordCard)}
+            </div>
+          ) : (
+            <div className="py-32 text-center space-y-6 max-w-md mx-auto">
+              <span className="text-7xl">🌟</span>
+              <h3 className="text-2xl font-black text-gray-800">Your collection is empty</h3>
+              <p className="text-gray-500 font-bold">Save words from the dictionary to keep track of tricky or favorite vocabulary!</p>
+              <button 
+                onClick={() => setActiveTab('dictionary')}
+                className="bg-[#1cb0f6] text-white p-4 px-10 rounded-2xl font-black shadow-[0_4px_0_#1899d6] active:translate-y-1 active:shadow-none transition-all"
+              >
+                GO TO DICTIONARY
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

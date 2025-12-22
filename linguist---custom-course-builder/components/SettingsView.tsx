@@ -5,17 +5,23 @@ import { CourseData, ProficiencyLevel } from '../types';
 import { PROFICIENCY_LEVELS } from '../constants';
 
 interface SettingsViewProps {
+  availableCourses: CourseData[];
+  onCourseSwitch: (courseId: string) => void;
   onCourseLoaded: (course: CourseData, mediaMap: Map<string, string>) => void;
   onResetProgress: () => void;
   currentProficiency: ProficiencyLevel;
   onUpdateProficiency: (level: ProficiencyLevel) => void;
+  currentCourseId: string;
 }
 
 const SettingsView: React.FC<SettingsViewProps> = ({ 
+  availableCourses,
+  onCourseSwitch,
   onCourseLoaded, 
   onResetProgress, 
   currentProficiency, 
-  onUpdateProficiency 
+  onUpdateProficiency,
+  currentCourseId
 }) => {
   return (
     <div className="max-w-4xl mx-auto py-12 px-6 space-y-12 animate-in fade-in slide-in-from-bottom duration-500 pb-32">
@@ -23,6 +29,38 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         <h1 className="text-4xl font-black text-gray-800">Settings</h1>
         <p className="text-gray-500 font-bold">Customize your learning experience and manage course data.</p>
       </div>
+
+      {/* Language Switcher Section */}
+      <section className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <h2 className="text-xl font-black text-gray-700 uppercase tracking-widest">My Languages</h2>
+          <div className="h-1 flex-1 bg-gray-100 rounded-full"></div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {availableCourses.map((course) => (
+            <button
+              key={course.id}
+              onClick={() => onCourseSwitch(course.id)}
+              className={`p-5 rounded-2xl flex items-center space-x-4 border-2 transition-all group ${
+                currentCourseId === course.id 
+                  ? 'bg-blue-50 border-[#1cb0f6] shadow-[0_4px_0_#1cb0f6]' 
+                  : 'bg-white border-gray-100 hover:border-gray-300 shadow-[0_4px_0_#e5e5e5]'
+              }`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                🌐
+              </div>
+              <div className="text-left">
+                <p className="font-black text-gray-800">{course.language}</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase">{course.courseTitle}</p>
+              </div>
+              {currentCourseId === course.id && (
+                <div className="ml-auto text-[#1cb0f6] font-black">✓</div>
+              )}
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Proficiency Stage Selection */}
       <section className="space-y-6">
@@ -60,7 +98,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
       {/* Course Management Section */}
       <section className="space-y-6">
         <div className="flex items-center space-x-4">
-          <h2 className="text-xl font-black text-gray-700 uppercase tracking-widest">Course Management</h2>
+          <h2 className="text-xl font-black text-gray-700 uppercase tracking-widest">Upload New Material</h2>
           <div className="h-1 flex-1 bg-gray-100 rounded-full"></div>
         </div>
         <div className="bg-white rounded-3xl overflow-hidden">
@@ -106,12 +144,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="text-center md:text-left space-y-2 mb-6 md:mb-0">
             <h3 className="text-xl font-black text-red-600">Reset All Progress</h3>
             <p className="text-sm text-red-400 font-bold max-w-sm">
-              This will permanently delete your XP, streaks, achievements, and mistakes history. This action cannot be undone.
+              This will permanently delete your XP, streaks, achievements, and saved words.
             </p>
           </div>
           <button 
             onClick={() => {
-              if (confirm("Are you absolutely sure? All your hard-earned progress will be lost!")) {
+              if (confirm("Are you absolutely sure? All progress will be lost!")) {
                 onResetProgress();
               }
             }}

@@ -11,7 +11,7 @@ export interface Exercise {
   answer: string;
   mediaPath?: string;
   explanation?: string;
-  wordBank?: string[]; // For word-sort
+  wordBank?: string[]; 
 }
 
 export interface Lesson {
@@ -27,13 +27,31 @@ export interface Unit {
   title: string;
   color: string;
   lessons: Lesson[];
-  level?: ProficiencyLevel; // Optional level tag for filtering
+  level?: ProficiencyLevel;
+}
+
+export interface DictionaryEntry {
+  id: string;
+  word: string;
+  translation: string;
+  definition?: string;
+  example?: string;
+}
+
+export interface GrammarLesson {
+  id: string;
+  title: string;
+  content: string;
+  examples: string[];
 }
 
 export interface CourseData {
+  id: string;
   courseTitle: string;
   language: string;
   units: Unit[];
+  dictionary?: DictionaryEntry[];
+  grammar?: GrammarLesson[];
 }
 
 export interface Achievement {
@@ -48,12 +66,14 @@ export interface Achievement {
 
 export interface UserStats {
   xp: number;
-  level: number; // XP based level
-  proficiencyLevel: ProficiencyLevel; // Learning stage level (Beginner to Near-native)
+  level: number;
+  proficiencyLevel: ProficiencyLevel;
   streak: number;
   hearts: number;
   gems: number;
   lastActiveDate: string;
   achievements: Achievement[];
-  failedExercises: Exercise[]; // For the "Mistakes Review" feature
+  failedExercises: Exercise[];
+  savedWordIds: Record<string, string[]>; // Map of language -> array of word IDs
+  currentCourseId: string;
 }
