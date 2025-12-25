@@ -28,7 +28,7 @@ const NotificationsView: React.FC<NotificationsViewProps> = ({ settings, onUpdat
     }
 
     if (permission === "granted") {
-      new Notification("Linguist Reminder!", {
+      new Notification("Lexi Reminder!", {
         body: "Time for your daily language lesson! Stay on your streak. 🔥",
         icon: "https://cdn-icons-png.flaticon.com/512/3253/3253215.png"
       });

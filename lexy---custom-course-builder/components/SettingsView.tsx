@@ -109,6 +109,39 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         )}
       </section>
 
+      {/* Proficiency Stage Selection */}
+      <section className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <h2 className="text-xl font-black text-gray-700 uppercase tracking-widest">Learning Stage</h2>
+          <div className="h-1 flex-1 bg-gray-100 rounded-full"></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {PROFICIENCY_LEVELS.map((info) => (
+            <button
+              key={info.level}
+              onClick={() => onUpdateProficiency(info.level)}
+              className={`duo-card p-4 flex flex-col items-center text-center space-y-3 transition-all transform active:scale-95 group border-2 ${
+                currentProficiency === info.level
+                  ? 'border-[#1cb0f6] bg-[#ddf4ff] shadow-[0_4px_0_#1cb0f6]'
+                  : 'border-gray-100 hover:border-gray-300 shadow-[0_4px_0_#e5e5e5]'
+              }`}
+            >
+              <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-white">
+                <img src={info.imageUrl} className="w-full h-full object-cover" alt={info.name} />
+              </div>
+              <div>
+                <h3 className={`font-black text-sm ${currentProficiency === info.level ? 'text-[#1cb0f6]' : 'text-gray-700'}`}>
+                  {info.name}
+                </h3>
+                <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-tighter">
+                  {info.description}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
       {/* Course Builder/Upload Section */}
       <section className="space-y-6">
         <div className="flex items-center space-x-4">
@@ -147,39 +180,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                 <UploadManager onCourseLoaded={onCourseLoaded} />
              </div>
           </div>
-        </div>
-      </section>
-
-      {/* Proficiency Stage Selection */}
-      <section className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-xl font-black text-gray-700 uppercase tracking-widest">Learning Stage</h2>
-          <div className="h-1 flex-1 bg-gray-100 rounded-full"></div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {PROFICIENCY_LEVELS.map((info) => (
-            <button
-              key={info.level}
-              onClick={() => onUpdateProficiency(info.level)}
-              className={`duo-card p-4 flex flex-col items-center text-center space-y-3 transition-all transform active:scale-95 group border-2 ${
-                currentProficiency === info.level
-                  ? 'border-[#1cb0f6] bg-[#ddf4ff] shadow-[0_4px_0_#1cb0f6]'
-                  : 'border-gray-100 hover:border-gray-300 shadow-[0_4px_0_#e5e5e5]'
-              }`}
-            >
-              <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-white">
-                <img src={info.imageUrl} className="w-full h-full object-cover" alt={info.name} />
-              </div>
-              <div>
-                <h3 className={`font-black text-sm ${currentProficiency === info.level ? 'text-[#1cb0f6]' : 'text-gray-700'}`}>
-                  {info.name}
-                </h3>
-                <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-tighter">
-                  {info.description}
-                </p>
-              </div>
-            </button>
-          ))}
         </div>
       </section>
 

@@ -7,7 +7,7 @@ interface LessonTreeProps {
   onStartLesson: (lesson: Lesson) => void;
 }
 
-const LinguistCharacter = () => (
+const LexiCharacter = () => (
   <div className="absolute -top-16 left-1/2 -translate-x-1/2 z-30 drop-shadow-xl animate-bounce pointer-events-none">
     <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Body */}
@@ -109,7 +109,7 @@ const LessonTree: React.FC<LessonTreeProps> = ({ units, onStartLesson }) => {
 
                   <div className="relative group">
                     {/* Character jumping above the specific current lesson */}
-                    {isCharacterHere && <LinguistCharacter />}
+                    {isCharacterHere && <LexiCharacter />}
 
                     <button
                       disabled={isLocked}

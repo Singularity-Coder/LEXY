@@ -24,7 +24,7 @@ const App: React.FC = () => {
   const [activeView, setActiveView] = useState<ViewType>('home');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar state
   const [availableCourses, setAvailableCourses] = useState<CourseData[]>(() => {
-    const saved = localStorage.getItem('linguist_courses_v2');
+    const saved = localStorage.getItem('lexi_courses_v1');
     return saved ? JSON.parse(saved) : [DUMMY_COURSE];
   });
   const [course, setCourse] = useState<CourseData>(DUMMY_COURSE);
@@ -60,7 +60,7 @@ const App: React.FC = () => {
   };
 
   const [stats, setStats] = useState<UserStats>(() => {
-    const saved = localStorage.getItem('linguist_stats_v4');
+    const saved = localStorage.getItem('lexi_stats_v1');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed.lessonsCompleted === undefined) {
@@ -72,11 +72,11 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    localStorage.setItem('linguist_stats_v4', JSON.stringify(stats));
+    localStorage.setItem('lexi_stats_v1', JSON.stringify(stats));
   }, [stats]);
 
   useEffect(() => {
-    localStorage.setItem('linguist_courses_v2', JSON.stringify(availableCourses));
+    localStorage.setItem('lexi_courses_v1', JSON.stringify(availableCourses));
   }, [availableCourses]);
 
   useEffect(() => {
@@ -226,7 +226,7 @@ const App: React.FC = () => {
               >
                 <span className="text-xl">☰</span>
               </button>
-              <span className="text-2xl font-black text-[#58cc02] tracking-tighter italic">LINGUIST</span>
+              <span className="text-2xl font-black text-[#58cc02] uppercase">LEXY</span>
            </div>
            <div className="flex gap-2">
              <div className="flex items-center gap-1 p-2 px-3 bg-orange-50 text-orange-500 rounded-xl font-black text-xs border border-orange-100">
