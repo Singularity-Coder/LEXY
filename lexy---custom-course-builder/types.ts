@@ -123,6 +123,7 @@ export interface UserStats {
   failedExercises: Exercise[];
   savedWordIds: Record<string, string[]>; // Map of language -> array of word IDs
   currentCourseId: string;
+  selectedMascotId: string;
   notifications: NotificationSettings;
   // New Stats
   lessonsCompleted: number;

@@ -2,8 +2,8 @@
 import { CourseData, ProficiencyLevel, CultureItem, Lesson, AICharacter } from './types';
 
 export const COLORS = {
-  primary: '#58cc02',
-  primaryDark: '#46a302',
+  primary: '#ad46ff',
+  primaryDark: '#00d4c2',
   secondary: '#1cb0f6',
   accent: '#ffc800',
   error: '#ff4b4b',
@@ -33,6 +33,17 @@ export const SIDEBAR_NAV_ITEMS = [
     { id: 'notifications', label: 'Reminders', icon: '🔔' },
     { id: 'profile', label: 'Profile', icon: '👤' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
+];
+
+export const MASCOTS = [
+  { id: 'girl', name: 'Lexy', icon: '👧' },
+  { id: 'bird', name: 'Lingo', icon: '🐦' },
+  { id: 'robot', name: 'Byte', icon: '🤖' },
+  { id: 'cat', name: 'Whiskers', icon: '🐱' },
+  { id: 'fox', name: 'Foxy', icon: '🦊' },
+  { id: 'panda', name: 'Pan', icon: '🐼' },
+  { id: 'bear', name: 'Barry', icon: '🐻' },
+  { id: 'dino', name: 'Roar', icon: '🦖' },
 ];
 
 export const PROFICIENCY_LEVELS: LevelInfo[] = [
@@ -100,7 +111,7 @@ export const DUMMY_COURSE: CourseData = {
     {
       id: "unit-1",
       title: "Essential Greetings",
-      color: "bg-[#58cc02]",
+      color: "bg-[#c27aff]",
       level: 1,
       lessons: [
         {

@@ -47,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       >
         {/* Header Area */}
         <div className="flex items-center justify-between p-6 pb-2">
-          <div className="text-4xl font-black text-[#58cc02] select-none uppercase">
+          <div className="text-4xl font-black text-purple-500 select-none uppercase">
             LEXY
           </div>
           {/* Mobile-only close button */}
@@ -84,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             {/* Unified Stats Box */}
             <div className="duo-card overflow-hidden border-gray-100 bg-white shadow-sm">
               {/* Daily Goal Row */}
-              <div className="p-3 px-4 bg-blue-50/50 border-b border-gray-200 font-black text-blue-600 transition-colors hover:bg-blue-50">
+              <div className="p-3 px-4 bg-blue-50 border-b-2 border-gray-100 font-black text-blue-600 transition-colors">
                 <div className="flex justify-between items-center mb-1.5">
                   <div className="flex items-center space-x-2">
                     <span className="text-base">🎯</span>
@@ -100,25 +100,25 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </div>
 
-              {/* Streak and Hearts Row Grid */}
-              <div className="grid grid-cols-2 border-b border-gray-200">
-                <div className="flex items-center justify-center space-x-2 p-3 bg-orange-50/50 border-r border-gray-200 font-black text-orange-500 transition-colors hover:bg-orange-50">
-                  <span className="text-lg">🔥</span>
-                  <span className="text-xs">{streak}</span>
-                </div>
-                <div className="flex items-center justify-center space-x-2 p-3 bg-red-50/50 font-black text-red-500 transition-colors hover:bg-red-50">
-                  <span className="text-lg">❤️</span>
-                  <span className="text-xs">{hearts}</span>
-                </div>
-              </div>
-
               {/* Total XP Row */}
-              <div className="flex items-center justify-between p-3 px-4 bg-yellow-50/50 font-black text-yellow-600 transition-colors hover:bg-yellow-50">
+              <div className="flex items-center justify-between p-3 px-4 border-b-2 border-gray-100 bg-yellow-50 font-black text-yellow-600 transition-colors">
                 <div className="flex items-center space-x-3">
                   <span className="text-lg">⚡</span>
                   <span className="text-[10px] uppercase tracking-widest leading-none">Total XP</span>
                 </div>
                 <span className="text-xs leading-none">{xp}</span>
+              </div>
+
+              {/* Streak and Hearts Row Grid */}
+              <div className="grid grid-cols-2">
+                <div className="flex items-center justify-center space-x-2 p-3 bg-orange-50 border-r-2 border-gray-100 font-black text-orange-500 transition-colors">
+                  <span className="text-lg">🔥</span>
+                  <span className="text-xs">{streak}</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2 p-3 bg-red-50 font-black text-red-500 transition-colors">
+                  <span className="text-lg">❤️</span>
+                  <span className="text-xs">{hearts}</span>
+                </div>
               </div>
             </div>
           </div>

@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import UploadManager from './UploadManager';
-import { CourseData, ProficiencyLevel } from '../types';
-import { PROFICIENCY_LEVELS } from '../constants';
+import { CourseData, ProficiencyLevel, NotificationSettings } from '../types';
+import { PROFICIENCY_LEVELS, MASCOTS } from '../constants';
+import Mascot from './Mascot';
 
 interface SettingsViewProps {
   availableCourses: CourseData[];
@@ -12,7 +13,11 @@ interface SettingsViewProps {
   currentProficiency: ProficiencyLevel;
   onUpdateProficiency: (level: ProficiencyLevel) => void;
   currentCourseId: string;
+  selectedMascotId: string;
+  onUpdateMascot: (mascotId: string) => void;
   onCreateCourse?: () => void;
+  notificationSettings: NotificationSettings;
+  onUpdateNotifications: (settings: NotificationSettings) => void;
 }
 
 const SettingsView: React.FC<SettingsViewProps> = ({ 
@@ -23,7 +28,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   currentProficiency, 
   onUpdateProficiency,
   currentCourseId,
-  onCreateCourse
+  selectedMascotId,
+  onUpdateMascot,
+  onCreateCourse,
+  notificationSettings,
+  onUpdateNotifications
 }) => {
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
 
@@ -56,6 +65,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({
       ))}
     </div>
   );
+
+  const togglePreference = (key: keyof NotificationSettings) => {
+    onUpdateNotifications({
+      ...notificationSettings,
+      [key]: !notificationSettings[key]
+    });
+  };
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-6 space-y-12 animate-in fade-in slide-in-from-bottom duration-500 pb-32">
@@ -142,7 +158,38 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </section>
 
-      {/* Course Builder/Upload Section */}
+      {/* Mascot Selection */}
+      <section className="space-y-6">
+        <div className="flex items-center space-x-4">
+          <h2 className="text-xl font-black text-gray-700 uppercase tracking-widest">Choose Your Mascot</h2>
+          <div className="h-1 flex-1 bg-gray-100 rounded-full"></div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {MASCOTS.map((mascot) => (
+            <button
+              key={mascot.id}
+              onClick={() => onUpdateMascot(mascot.id)}
+              className={`duo-card p-6 flex flex-col items-center text-center space-y-3 transition-all transform active:scale-95 group border-2 ${
+                selectedMascotId === mascot.id
+                  ? 'border-[#1cb0f6] bg-[#ddf4ff] shadow-[0_4px_0_#1cb0f6]'
+                  : 'border-gray-100 hover:border-gray-300 shadow-[0_4px_0_#e5e5e5]'
+              }`}
+            >
+              <div className="mb-2 group-hover:scale-110 transition-transform">
+                <Mascot id={mascot.id} size={50} />
+              </div>
+              <h3 className={`font-black text-sm ${selectedMascotId === mascot.id ? 'text-[#1cb0f6]' : 'text-gray-700'}`}>
+                {mascot.name}
+              </h3>
+              {selectedMascotId === mascot.id && (
+                <div className="text-[10px] font-black text-[#1cb0f6] uppercase">Active</div>
+              )}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Course Management */}
       <section className="space-y-6">
         <div className="flex items-center space-x-4">
           <h2 className="text-xl font-black text-gray-700 uppercase tracking-widest">Course Management</h2>
@@ -195,8 +242,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({
               <h3 className="font-black text-gray-800">Sound Effects</h3>
               <p className="text-xs text-gray-400 font-bold">Play sounds during lessons</p>
             </div>
-            <button className="w-12 h-6 bg-[#58cc02] rounded-full relative flex items-center px-1">
-              <div className="w-4 h-4 bg-white rounded-full ml-auto shadow-sm"></div>
+            <button 
+              onClick={() => togglePreference('soundEnabled')}
+              className={`w-14 h-8 rounded-full relative transition-colors ${notificationSettings.soundEnabled ? 'bg-[#58cc02]' : 'bg-gray-200'}`}
+            >
+              <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${notificationSettings.soundEnabled ? 'right-1' : 'left-1'}`} />
             </button>
           </div>
           <div className="duo-card p-6 flex items-center justify-between">
@@ -204,8 +254,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({
               <h3 className="font-black text-gray-800">Motivational Messages</h3>
               <p className="text-xs text-gray-400 font-bold">Show cheers from characters</p>
             </div>
-            <button className="w-12 h-6 bg-[#58cc02] rounded-full relative flex items-center px-1">
-              <div className="w-4 h-4 bg-white rounded-full ml-auto shadow-sm"></div>
+            <button 
+              onClick={() => togglePreference('motivationalAlerts')}
+              className={`w-14 h-8 rounded-full relative transition-colors ${notificationSettings.motivationalAlerts ? 'bg-[#58cc02]' : 'bg-gray-200'}`}
+            >
+              <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${notificationSettings.motivationalAlerts ? 'right-1' : 'left-1'}`} />
             </button>
           </div>
         </div>
