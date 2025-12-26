@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
+import React, { useEffect, useRef, useState } from 'react';
+import { MYTHICAL_CHARACTERS } from '../constants';
 import { AICharacter, ChatMessage } from '../types';
-import { MYTHICAL_CHARACTERS } from '../constants'
 
 interface AIChatsViewProps {
   currentLanguage: string;
@@ -11,6 +11,7 @@ interface AIChatsViewProps {
 const AIChatsView: React.FC<AIChatsViewProps> = ({ currentLanguage }) => {
   const [selectedCharacter, setSelectedCharacter] = useState<AICharacter>(MYTHICAL_CHARACTERS[0]);
   const [viewMode, setViewMode] = useState<'list' | 'chat'>('list'); // For mobile toggle logic
+  const [showFullAvatar, setShowFullAvatar] = useState(false);
   const [chatHistories, setChatHistories] = useState<Record<string, ChatMessage[]>>({
     'zeus': [
       { role: 'model', text: "Mortal! I sense you are learning the nuances of the tongue. How can the King of Olympus assist your journey?", timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
@@ -87,7 +88,7 @@ const AIChatsView: React.FC<AIChatsViewProps> = ({ currentLanguage }) => {
         {/* Left Sidebar: Character Grid - Hidden on mobile when viewing chat */}
         <div className={`${viewMode === 'chat' ? 'hidden md:flex' : 'flex'} w-full md:w-[380px] border-r-2 border-gray-100 flex-col bg-gray-50/20 overflow-hidden shrink-0`}>
           {/* Header Section */}
-          <div className="p-8 border-b-2 border-gray-100 bg-white shrink-0">
+          <div className="pt-10 px-8 pb-8 border-b-2 border-gray-100 bg-white shrink-0">
             <h1 className="text-4xl font-black text-gray-800 tracking-tight">AI Chats</h1>
             <p className="text-sm text-gray-400 font-bold mt-2 leading-relaxed">
               Chat with Gods, Mythical creatures and other historical figures of <span className="text-[#ad46ff] font-black">{currentLanguage}</span> language
@@ -147,7 +148,11 @@ const AIChatsView: React.FC<AIChatsViewProps> = ({ currentLanguage }) => {
               >
                 ←
               </button>
-              <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-gray-100 shadow-sm bg-gray-50">
+              {/* Avatar - Clickable to show full image */}
+              <div 
+                onClick={() => setShowFullAvatar(true)}
+                className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-gray-100 shadow-sm bg-gray-50 cursor-zoom-in hover:scale-105 active:scale-95 transition-all"
+              >
                 <img src={selectedCharacter.avatar} alt={selectedCharacter.name} className="w-full h-full object-cover" />
               </div>
               <div className="flex flex-col">
@@ -238,6 +243,40 @@ const AIChatsView: React.FC<AIChatsViewProps> = ({ currentLanguage }) => {
           </div>
         </div>
       </div>
+
+      {/* Full Avatar Modal - Full Screen height, info in bottom-left corner with gradient background */}
+      {showFullAvatar && (
+        <div 
+          className="fixed inset-0 z-[200] bg-black flex items-center justify-center animate-in fade-in duration-300"
+          onClick={() => setShowFullAvatar(false)}
+        >
+          {/* Close Button */}
+          <button 
+            onClick={() => setShowFullAvatar(false)}
+            className="absolute top-6 right-6 md:top-10 md:right-10 z-[210] bg-white/10 hover:bg-white/30 text-white w-14 h-14 rounded-full flex items-center justify-center text-3xl backdrop-blur-md transition-all border border-white/10 group shadow-2xl"
+          >
+            <span className="group-hover:rotate-90 transition-transform duration-300">✕</span>
+          </button>
+
+          <div 
+            className="w-full h-full relative flex items-center justify-center animate-in zoom-in duration-300"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Image fills screen height, maintains proportions, no borders or rounded corners */}
+            <img 
+              src={selectedCharacter.avatar} 
+              className="h-full w-full object-contain" 
+              alt={selectedCharacter.name} 
+            />
+            
+            {/* Bottom-left info overlay with faded black gradient */}
+            <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 text-left bg-gradient-to-t from-black/80 via-black/40 to-transparent animate-in slide-in-from-bottom duration-500 delay-150">
+              <h2 className="text-white text-4xl md:text-5xl font-black tracking-tight mb-2 drop-shadow-lg">{selectedCharacter.name}</h2>
+              <p className="text-purple-400 font-black uppercase tracking-[0.25em] text-xs md:text-sm drop-shadow-lg">{selectedCharacter.role}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

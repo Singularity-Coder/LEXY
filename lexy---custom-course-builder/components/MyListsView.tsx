@@ -30,7 +30,7 @@ const MyListsView: React.FC<MyListsViewProps> = ({ dictionary = [], savedWordIds
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-12 px-6 space-y-12 animate-in fade-in duration-500 pb-32">
+    <div className="max-w-6xl mx-auto py-10 px-6 space-y-12 animate-in fade-in duration-500 pb-32">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <h1 className="text-4xl font-black text-gray-800 tracking-tight">My Collections</h1>

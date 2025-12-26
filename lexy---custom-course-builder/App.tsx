@@ -231,7 +231,7 @@ const App: React.FC = () => {
       />
 
       {/* Main Content Area - Fixed Left Padding of 72 on Desktop to accommodate fixed sidebar */}
-      <main className="flex-1 relative transition-all duration-300 md:pl-72">
+      <main className="flex-1 relative transition-all duration-300 md:pl-72 bg-white min-h-screen">
         {/* Mobile Header bar - Visible only on small screens */}
         <div className="md:hidden p-4 border-b-2 border-gray-100 flex items-center justify-between sticky top-0 bg-white z-40">
            <div className="flex items-center gap-4">
@@ -260,13 +260,14 @@ const App: React.FC = () => {
 
         {/* View Routing */}
         {activeView === 'home' && (
-          <div className="pb-24 max-w-4xl mx-auto px-4">
-             <div className="mt-12 mb-8 px-4 text-left">
+          <div className="py-10 pb-12 max-w-4xl mx-auto px-4 bg-white">
+             {/* Header Section - Adjusted padding to match Search menu consistency */}
+             <div className="mb-4 px-4 text-left">
                 <h1 className="text-4xl font-black text-gray-800 tracking-tight">{course.language}</h1>
                 <p className="text-lg text-gray-500 font-bold mt-1">Level: {currentLevelName}</p>
              </div>
              {stats.failedExercises.length > 0 && (
-               <div className="mt-8 p-6 bg-purple-100 rounded-2xl border-2 border-purple-200 flex items-center justify-between">
+               <div className="mt-4 p-4 bg-purple-100 rounded-2xl border-2 border-purple-200 flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <span className="text-4xl">🎯</span>
                     <div>

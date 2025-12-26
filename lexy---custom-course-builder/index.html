@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-white h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,9 +12,14 @@
             --primary: #ad46ff;
             --primary-dark: #8439a3;
         }
+        html, body, #root {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+        }
         body {
             font-family: 'Nunito', sans-serif;
-            background-color: white;
             color: #4b4b4b;
         }
         .duo-btn-primary {
@@ -124,8 +129,8 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body class="bg-white text-gray-800">
-    <div id="root"></div>
+<body class="bg-white text-gray-800 h-full">
+    <div id="root" class="h-full"></div>
 <script type="module" src="/index.tsx"></script>
 </body>
 </html>

@@ -36,7 +36,7 @@ const NotificationsView: React.FC<NotificationsViewProps> = ({ settings, onUpdat
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6 space-y-12 animate-in fade-in slide-in-from-bottom duration-500 pb-32">
+    <div className="max-w-3xl mx-auto py-10 px-6 space-y-12 animate-in fade-in slide-in-from-bottom duration-500 pb-32">
       <div className="text-center md:text-left space-y-2">
         <h1 className="text-4xl font-black text-gray-800 tracking-tight">Reminders</h1>
         <p className="text-lg text-gray-500 font-bold mt-1">Stay consistent and never miss a streak.</p>

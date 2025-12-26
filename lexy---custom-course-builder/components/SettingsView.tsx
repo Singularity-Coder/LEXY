@@ -172,7 +172,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
 
   return (
     <>
-      <div className="max-w-4xl mx-auto py-12 px-6 space-y-12 animate-in fade-in slide-in-from-bottom duration-500 pb-32">
+      <div className="max-w-4xl mx-auto py-10 px-6 space-y-12 animate-in fade-in slide-in-from-bottom duration-500 pb-32">
         <div className="space-y-2">
           <h1 className="text-4xl font-black text-gray-800 tracking-tight">Settings</h1>
           <p className="text-lg text-gray-500 font-bold mt-1">Customize your learning experience and manage course data.</p>

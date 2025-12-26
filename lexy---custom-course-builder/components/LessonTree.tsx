@@ -22,26 +22,24 @@ const LessonTree: React.FC<LessonTreeProps> = ({ units, onStartLesson, selectedM
   }, [units]);
 
   return (
-    <div className="max-w-5xl mx-auto py-10 px-4 space-y-24">
+    <div className="max-w-5xl mx-auto py-2 px-4 space-y-12">
       {units.map((unit, unitIdx) => (
-        <div key={unit.id} className="relative space-y-16">
-          {/* Unit Header */}
-          <div className="w-full">
-            <div className={`${unit.color} p-8 px-12 rounded-3xl text-white shadow-xl relative overflow-hidden group border-b-8 border-black/10`}>
-               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-                 <span className="text-9xl">🎯</span>
-               </div>
+        <div key={unit.id} className="relative">
+          {/* Unit Header - Increased bottom margin to 'increase less padding above' the lessons */}
+          <div className="w-full mb-10">
+            <div className={`${unit.color} p-6 px-10 rounded-[1.4rem] text-white shadow-xl relative overflow-hidden group border-b-8 border-black/10 transition-all`}>
                <div className="relative z-10">
-                  <h2 className="text-lg font-black opacity-80 uppercase tracking-[0.3em] mb-2">
+                  <h2 className="text-sm font-black opacity-80 uppercase tracking-[0.2em] mb-1">
                     Unit {unitIdx + 1}
                   </h2>
-                  <h1 className="text-4xl font-black">{unit.title}</h1>
+                  {/* Changed font-black to font-bold per user request "I dont want this bold" */}
+                  <h1 className="text-3xl font-bold tracking-tight">{unit.title}</h1>
                </div>
             </div>
           </div>
 
-          {/* Lessons Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-y-20 relative px-4">
+          {/* Lessons Grid - Reduced gap-y to 2 to 'remove bottom padding' between rows */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-y-2 relative px-4">
             {unit.lessons.map((lesson, idx) => {
               const isCharacterHere = lesson.id === globalCurrentLessonId;
               const isCompleted = lesson.status === 'completed';
@@ -52,8 +50,8 @@ const LessonTree: React.FC<LessonTreeProps> = ({ units, onStartLesson, selectedM
               const isEndOfRowMobile = (idx + 1) % 2 === 0;
 
               return (
-                <div key={lesson.id} className="relative flex justify-center items-center h-24">
-                  {/* Connecting Lines - Themed to Unit color */}
+                <div key={lesson.id} className="relative flex justify-center items-center h-[5rem] md:h-[6.5rem]">
+                  {/* Connecting Lines - Adjusted lengths for tighter vertical spacing */}
                   {!isLastInUnit && (
                     <>
                       {/* Desktop Line */}
@@ -61,7 +59,7 @@ const LessonTree: React.FC<LessonTreeProps> = ({ units, onStartLesson, selectedM
                         isCompleted ? `${unit.color} opacity-40` : ''
                       } ${
                         isEndOfRowDesktop 
-                        ? 'w-3 h-24 top-full left-1/2 -translate-x-1/2' 
+                        ? 'w-3 h-2 top-full left-1/2 -translate-x-1/2' 
                         : 'w-full left-1/2'
                       }`} />
 
@@ -70,7 +68,7 @@ const LessonTree: React.FC<LessonTreeProps> = ({ units, onStartLesson, selectedM
                         isCompleted ? `${unit.color} opacity-40` : ''
                       } ${
                         isEndOfRowMobile 
-                        ? 'w-2 h-24 top-full left-1/2 -translate-x-1/2' 
+                        ? 'w-2 h-2 top-full left-1/2 -translate-x-1/2' 
                         : 'w-full left-1/2'
                       }`} />
                     </>
@@ -78,7 +76,7 @@ const LessonTree: React.FC<LessonTreeProps> = ({ units, onStartLesson, selectedM
 
                   {/* Inter-unit connecting line */}
                   {isLastInUnit && unitIdx < units.length - 1 && (
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-4 h-32 bg-gray-100 -z-20 rounded-full" />
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-4 h-8 bg-gray-100 -z-20 rounded-full" />
                   )}
 
                   <div className="relative group">
@@ -90,14 +88,14 @@ const LessonTree: React.FC<LessonTreeProps> = ({ units, onStartLesson, selectedM
                       </div>
                     )}
 
-                    {/* Lesson Button - Themed to Unit color */}
+                    {/* Lesson Button */}
                     <button
                       disabled={isLocked}
                       onClick={() => onStartLesson(lesson)}
-                      className={`w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 relative z-10 border-b-[6px] md:border-b-[8px] ${
+                      className={`w-[4.2rem] h-[4.2rem] md:w-[5.5rem] md:h-[5.5rem] rounded-[1.6rem] flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 relative z-10 border-b-[6px] md:border-b-[8px] ${
                         isLocked
-                          ? 'bg-gray-100 border-gray-200'
-                          : `${unit.color} border-black/20`
+                          ? 'bg-gray-100 border-gray-200 shadow-none'
+                          : `${unit.color} border-black/20 shadow-md`
                       }`}
                     >
                       <div className="flex flex-col items-center">
@@ -111,9 +109,9 @@ const LessonTree: React.FC<LessonTreeProps> = ({ units, onStartLesson, selectedM
                       </div>
                     </button>
 
-                    {/* Active Pulsing Ring */}
+                    {/* Active Pulsing Ring - Increased negative margin from -1.5 to -3 for more space between button and ring */}
                     {!isLocked && !isCompleted && (
-                      <div className={`absolute inset-0 -m-2 border-4 rounded-full animate-pulse pointer-events-none opacity-40 ${
+                      <div className={`absolute inset-0 -m-3 border-4 rounded-[2.6rem] md:rounded-[2.3rem] animate-pulse pointer-events-none opacity-40 ${
                         unit.color.replace('bg-', 'border-')
                       }`} />
                     )}
