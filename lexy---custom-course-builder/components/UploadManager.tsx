@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { CourseData } from '../types';
+import { CourseData, CultureItem } from '../types';
 import JSZip from 'jszip';
 
 interface UploadManagerProps {
@@ -17,6 +17,15 @@ const UploadManager: React.FC<UploadManagerProps> = ({ onCourseLoaded, existingC
     if (e.target.files && e.target.files[0]) {
       setLexyFile(e.target.files[0]);
     }
+  };
+
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
   const handleUpload = async () => {
@@ -48,7 +57,6 @@ const UploadManager: React.FC<UploadManagerProps> = ({ onCourseLoaded, existingC
       const language = manifest.fields?.language || "Unknown";
 
       // 3. Conflict Detection
-      // ID logic: We often use language name as an implicit ID match for replacements
       const hasConflict = existingCourses.some(lang => lang.toLowerCase() === language.toLowerCase());
       if (hasConflict) {
         const confirmed = window.confirm(
@@ -71,10 +79,35 @@ const UploadManager: React.FC<UploadManagerProps> = ({ onCourseLoaded, existingC
 
       const dictionary = dataFiles.dictionary ? await loadJson(dataFiles.dictionary.path) : [];
       const grammar = dataFiles.grammar ? await loadJson(dataFiles.grammar.path) : [];
-      const cultureItems = dataFiles.culture ? await loadJson(dataFiles.culture.path) : [];
+      const cultureItems = (dataFiles.culture ? await loadJson(dataFiles.culture.path) : []) as CultureItem[];
       const units = dataFiles.units ? await loadJson(dataFiles.units.path) : [];
 
-      // 5. Construct Final CourseData
+      // 5. Re-attach assets from zip to base64 for app usage
+      for (const item of cultureItems) {
+        // Handle thumbnail
+        if (item.thumbnailUrl && item.thumbnailUrl.startsWith('assets/')) {
+          const file = zip.file(item.thumbnailUrl);
+          if (file) {
+            const blob = await file.async("blob");
+            item.thumbnailUrl = await blobToBase64(blob);
+          }
+        }
+        
+        // Handle assets
+        if (item.assets) {
+          for (const asset of item.assets) {
+            if (asset.value.startsWith('assets/')) {
+              const file = zip.file(asset.value);
+              if (file) {
+                const blob = await file.async("blob");
+                asset.value = await blobToBase64(blob);
+              }
+            }
+          }
+        }
+      }
+
+      // 6. Construct Final CourseData
       const courseData: CourseData = {
         id: manifest.courseId || `course-${Date.now()}`,
         courseTitle: manifest.fields?.title || "Imported Course",
@@ -85,14 +118,15 @@ const UploadManager: React.FC<UploadManagerProps> = ({ onCourseLoaded, existingC
         cultureItems: cultureItems
       };
       
-      // 6. Media mapping (Placeholder for future assets)
+      // 7. Media mapping
       const mediaMap = new Map<string, string>();
       
       onCourseLoaded(courseData, mediaMap);
       
       // Clear file after success
       setLexyFile(null);
-      (document.getElementById('lexy-upload-input') as HTMLInputElement).value = '';
+      const input = document.getElementById('lexy-upload-input') as HTMLInputElement;
+      if (input) input.value = '';
       
     } catch (err) {
       console.error(err);

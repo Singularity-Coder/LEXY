@@ -1,4 +1,5 @@
 
+
 export type ExerciseType = 'multiple-choice' | 'audio-match' | 'video-lesson' | 'text-translate' | 'word-sort' | 'speech-check';
 
 export type ProficiencyLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -56,15 +57,24 @@ export interface BookRecommendation {
   level: string;
 }
 
+export interface CultureAsset {
+  type: 'video' | 'audio' | 'pdf' | 'image' | 'youtube' | 'link';
+  value: string; // URL or Base64 data string
+  name: string;
+}
+
 export interface CultureItem {
   id: string;
   title: string;
   subtitle?: string;
   category: 'Famous people' | 'Art & Masterpieces' | 'Books' | 'Movies & TV series' | 'Music & Artists' | 'Folklore & Traditions' | 'Icons & Landmarks' | 'Religion & Beliefs' | 'Festivals';
   description: string;
-  type: 'video' | 'audio' | 'link' | 'image';
-  mediaUrl?: string;
+  // Made assets optional to support both flat structure (legacy) and asset-based structure
+  assets?: CultureAsset[];
   thumbnailUrl: string;
+  // Added properties to satisfy constants.ts dummy data and CultureView usage
+  type?: 'video' | 'audio' | 'pdf' | 'image' | 'youtube' | 'link';
+  mediaUrl?: string;
   platform?: string;
 }
 

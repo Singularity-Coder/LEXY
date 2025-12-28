@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { CourseData, DictionaryEntry, GrammarLesson, CultureItem, Unit } from '../types';
+import React, { useState, useRef } from 'react';
+import { CourseData, DictionaryEntry, GrammarLesson, CultureItem, Unit, CultureAsset } from '../types';
 import JSZip from 'jszip';
 
 interface CourseBuilderProps {
@@ -57,9 +57,45 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ onCourseSaved, onCancel }
 
   const handleExportLexy = async () => {
     const zip = new JSZip();
+    
+    // Create a copy of culture items for JSON so we can replace base64 with relative paths
+    const cultureItemsCopy = JSON.parse(JSON.stringify(course.cultureItems || [])) as CultureItem[];
+    const assetFolder = zip.folder("assets");
+
+    // Extract binary assets
+    for (const item of cultureItemsCopy) {
+      if (item.assets) {
+        for (const asset of item.assets) {
+          // Check if it's a data URL (base64)
+          if (asset.value.startsWith('data:')) {
+            const parts = asset.value.split(';base64,');
+            const base64Data = parts[1];
+            // Sanitize file name
+            const cleanName = asset.name.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
+            const fileName = `asset_${Date.now()}_${cleanName}`;
+            
+            // Add file to ZIP
+            assetFolder?.file(fileName, base64Data, { base64: true });
+            
+            // Replace base64 with relative path in the JSON copy
+            asset.value = `assets/${fileName}`;
+          }
+        }
+      }
+      
+      // Handle the thumbnail too if it's base64
+      if (item.thumbnailUrl && item.thumbnailUrl.startsWith('data:')) {
+        const parts = item.thumbnailUrl.split(';base64,');
+        const base64Data = parts[1];
+        const fileName = `thumb_${item.id}_${Date.now()}.png`;
+        assetFolder?.file(fileName, base64Data, { base64: true });
+        item.thumbnailUrl = `assets/${fileName}`;
+      }
+    }
+
     zip.file("data/dictionary.json", JSON.stringify(course.dictionary || [], null, 2));
     zip.file("data/grammar.json", JSON.stringify(course.grammar || [], null, 2));
-    zip.file("data/culture.json", JSON.stringify(course.cultureItems || [], null, 2));
+    zip.file("data/culture.json", JSON.stringify(cultureItemsCopy, null, 2));
     zip.file("data/units.json", JSON.stringify(course.units || [], null, 2));
     
     const manifest = {
@@ -454,14 +490,16 @@ const GrammarBuilder = ({ items, onUpdate }: { items: GrammarLesson[], onUpdate:
 const CultureBuilder = ({ items, onUpdate }: { items: CultureItem[], onUpdate: (items: CultureItem[]) => void }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<CultureItem | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [form, setForm] = useState<Partial<CultureItem>>({ 
     title: '', 
     category: 'Famous people', 
     description: '', 
-    mediaUrl: '',
-    type: 'video',
-    platform: 'YouTube'
+    assets: []
   });
+  
+  const [ytLink, setYtLink] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories = [
     'Famous people', 'Art & Masterpieces', 'Books', 'Movies & TV series', 'Music & Artists', 'Folklore & Traditions', 'Icons & Landmarks', 'Religion & Beliefs', 'Festivals'
@@ -473,24 +511,85 @@ const CultureBuilder = ({ items, onUpdate }: { items: CultureItem[], onUpdate: (
       setForm(item);
     } else {
       setEditingItem(null);
-      setForm({ title: '', category: 'Famous people', description: '', mediaUrl: '', type: 'video', platform: 'YouTube' });
+      setForm({ title: '', category: 'Famous people', description: '', assets: [] });
     }
     setShowModal(true);
   };
 
-  const handleSave = () => {
-    if (!form.title || !form.mediaUrl) return;
+  const addYtLink = () => {
+    if (!ytLink.trim()) return;
+    const newAsset: CultureAsset = {
+      type: 'youtube',
+      value: ytLink.trim(),
+      name: `YouTube: ${ytLink.split('v=')[1] || ytLink.split('/').pop()}`
+    };
+    setForm(prev => ({ ...prev, assets: [...(prev.assets || []), newAsset] }));
+    setYtLink('');
+  };
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const newAssets: CultureAsset[] = [];
     
+    for (const file of Array.from(files)) {
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+
+      let type: CultureAsset['type'] = 'link';
+      if (file.type.startsWith('image/')) type = 'image';
+      else if (file.type.startsWith('video/')) type = 'video';
+      else if (file.type.startsWith('audio/')) type = 'audio';
+      else if (file.type === 'application/pdf') type = 'pdf';
+
+      newAssets.push({
+        type,
+        value: base64,
+        name: file.name
+      });
+    }
+    
+    setForm(prev => ({ ...prev, assets: [...(prev.assets || []), ...newAssets] }));
+  };
+
+  const removeAsset = (idx: number) => {
+    setForm(prev => ({
+      ...prev,
+      assets: (prev.assets || []).filter((_, i) => i !== idx)
+    }));
+  };
+
+  const handleSave = () => {
+    if (!form.title) {
+        alert("Please provide a title for the culture item.");
+        return;
+    }
+    
+    // Find a thumbnail from assets
     let thumb = 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=400&auto=format&fit=crop';
-    if (form.mediaUrl?.includes('youtube.com') || form.mediaUrl?.includes('youtu.be')) {
-      const vid = form.mediaUrl.split('v=')[1] || form.mediaUrl.split('/').pop();
+    const ytAsset = form.assets?.find(a => a.type === 'youtube');
+    const imgAsset = form.assets?.find(a => a.type === 'image');
+    
+    if (ytAsset) {
+      const vid = ytAsset.value.split('v=')[1] || ytAsset.value.split('/').pop();
       if (vid) thumb = `https://img.youtube.com/vi/${vid}/maxresdefault.jpg`;
+    } else if (imgAsset) {
+      thumb = imgAsset.value;
     }
 
+    const newItem = { 
+      ...form, 
+      id: editingItem?.id || `cult-${Date.now()}`, 
+      thumbnailUrl: thumb,
+      assets: form.assets || []
+    } as CultureItem;
+
     if (editingItem) {
-      onUpdate(items.map(i => i.id === editingItem.id ? { ...form, id: i.id, thumbnailUrl: thumb } as CultureItem : i));
+      onUpdate(items.map(i => i.id === editingItem.id ? newItem : i));
     } else {
-      onUpdate([...items, { ...form, id: `cult-${Date.now()}`, thumbnailUrl: thumb } as CultureItem]);
+      onUpdate([...items, newItem]);
     }
     setShowModal(false);
   };
@@ -539,19 +638,19 @@ const CultureBuilder = ({ items, onUpdate }: { items: CultureItem[], onUpdate: (
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in duration-300">
-            <div className="p-8 border-b-2 border-gray-50 flex justify-between items-center">
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in duration-300 mx-6">
+            <div className="p-8 border-b-2 border-gray-50 flex justify-between items-center bg-gray-50/30">
                <h3 className="text-2xl font-black text-gray-800">{editingItem ? 'Edit' : 'Add New'} Item</h3>
                <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 font-black">✕</button>
             </div>
-            <div className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Title</label>
                   <input 
                     placeholder="e.g. History of Paris" 
-                    className="w-full p-4 rounded-2xl border-2 border-gray-100 font-bold outline-none focus:border-[#ad46ff] bg-gray-50" 
+                    className="w-full p-4 rounded-2xl border-2 border-gray-100 font-bold outline-none focus:border-[#ad46ff] bg-gray-50/50" 
                     value={form.title}
                     onChange={e => setForm(prev => ({...prev, title: e.target.value}))}
                   />
@@ -559,7 +658,7 @@ const CultureBuilder = ({ items, onUpdate }: { items: CultureItem[], onUpdate: (
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Category</label>
                   <select 
-                    className="w-full p-4 rounded-2xl border-2 border-gray-100 font-bold outline-none focus:border-[#ad46ff] bg-gray-50"
+                    className="w-full p-4 rounded-2xl border-2 border-gray-100 font-bold outline-none focus:border-[#ad46ff] bg-gray-50/50"
                     value={form.category}
                     onChange={e => setForm(prev => ({...prev, category: e.target.value as any}))}
                   >
@@ -567,30 +666,86 @@ const CultureBuilder = ({ items, onUpdate }: { items: CultureItem[], onUpdate: (
                   </select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Link (YouTube, etc)</label>
-                <input 
-                  placeholder="Paste URL here..." 
-                  className="w-full p-4 rounded-2xl border-2 border-gray-100 font-bold outline-none focus:border-[#ad46ff] bg-gray-50" 
-                  value={form.mediaUrl}
-                  onChange={e => setForm(prev => ({...prev, mediaUrl: e.target.value}))}
-                />
-              </div>
+
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Description</label>
                 <textarea 
                   placeholder="Share a fun fact or context..." 
-                  className="w-full p-4 rounded-2xl border-2 border-gray-100 font-bold outline-none focus:border-[#ad46ff] h-24 bg-gray-50" 
+                  className="w-full p-4 rounded-2xl border-2 border-gray-100 font-bold outline-none focus:border-[#ad46ff] h-24 bg-gray-50/50" 
                   value={form.description}
                   onChange={e => setForm(prev => ({...prev, description: e.target.value}))}
                 />
               </div>
-              <div className="flex justify-end">
+
+              <div className="space-y-4 border-2 border-dashed border-gray-200 p-6 rounded-[2rem] bg-gray-50/50">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 block mb-2">Media Assets & Links</label>
+                
+                {/* YouTube Link Input */}
+                <div className="flex gap-2 mb-4">
+                  <input 
+                    placeholder="Paste YouTube Link here..." 
+                    className="flex-1 p-4 rounded-xl border-2 border-gray-100 font-bold outline-none focus:border-[#ad46ff] bg-white" 
+                    value={ytLink}
+                    onChange={e => setYtLink(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addYtLink()}
+                  />
+                  <button 
+                    onClick={addYtLink}
+                    className="bg-purple-100 text-purple-700 p-4 px-6 rounded-xl font-black shadow-[0_4px_0_#c4b5fd] hover:bg-purple-200 active:translate-y-1 active:shadow-none transition-all uppercase tracking-widest text-[10px]"
+                  >
+                    ADD LINK
+                  </button>
+                </div>
+
+                {/* File Dropzone */}
+                <div 
+                  className={`border-4 border-dashed rounded-3xl p-10 text-center transition-all duration-300 cursor-pointer flex flex-col items-center justify-center space-y-3 ${
+                    isDragging 
+                    ? 'border-[#ad46ff] bg-purple-50 scale-[1.02]' 
+                    : 'border-gray-300 bg-white hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+                  onDragEnter={e => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={e => { e.preventDefault(); setIsDragging(false); }}
+                  onDrop={e => { e.preventDefault(); setIsDragging(false); handleFileUpload(e.dataTransfer.files); }}
+                >
+                  <input type="file" multiple ref={fileInputRef} className="hidden" onChange={e => handleFileUpload(e.target.files)} />
+                  <span className={`text-4xl block mb-2 transition-transform duration-300 ${isDragging ? 'scale-125 animate-bounce' : ''}`}>
+                    {isDragging ? '📥' : '📤'}
+                  </span>
+                  <p className={`text-xs font-black uppercase tracking-widest transition-colors ${isDragging ? 'text-[#ad46ff]' : 'text-gray-400'}`}>
+                    {isDragging ? 'Drop to Attach Files' : 'Drag & Drop Files or Click to Browse'}
+                  </p>
+                  <p className="text-[9px] text-gray-300 font-bold mt-1">Videos, Audio, PDFs, Images supported</p>
+                </div>
+
+                {/* Attachments List */}
+                <div className="space-y-2 mt-4">
+                  {(form.assets || []).map((asset, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 px-4 bg-white rounded-xl border-2 border-gray-100 animate-in slide-in-from-left duration-200">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <span className="text-xl">
+                          {asset.type === 'youtube' ? '📺' : asset.type === 'image' ? '🖼️' : asset.type === 'video' ? '🎬' : asset.type === 'audio' ? '🎵' : asset.type === 'pdf' ? '📄' : '🔗'}
+                        </span>
+                        <span className="text-xs font-bold text-gray-600 truncate">{asset.name}</span>
+                      </div>
+                      <button onClick={() => removeAsset(idx)} className="text-gray-300 hover:text-red-500 font-black p-1">✕</button>
+                    </div>
+                  ))}
+                  {(form.assets || []).length === 0 && (
+                    <p className="text-center text-[10px] font-bold text-gray-300 italic py-2">No attachments added yet</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Button Area */}
+              <div className="flex justify-end pt-6 pb-12">
                  <button 
                   onClick={handleSave}
-                  className="p-4 px-10 bg-[#ad46ff] text-white rounded-2xl font-black shadow-[0_4px_0_#8439a3]"
+                  className="p-5 px-12 bg-[#ad46ff] text-white rounded-[1.5rem] font-black shadow-[0_6px_0_#8439a3] hover:bg-[#8439a3] active:translate-y-1 active:shadow-none transition-all uppercase tracking-widest text-xs"
                  >
-                   SAVE ITEM
+                   SAVE CULTURE ITEM
                  </button>
               </div>
             </div>

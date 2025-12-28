@@ -29,7 +29,8 @@ const CultureView: React.FC<CultureViewProps> = ({ books = [], cultureItems = []
     const description = item.description;
     const thumb = isBook ? (item as BookRecommendation).imageUrl : (item as CultureItem).thumbnailUrl;
     const subtitle = isBook ? `by ${(item as BookRecommendation).author}` : (item as CultureItem).subtitle;
-    const platform = !isBook ? (item as CultureItem).platform : 'Book';
+    // Fix: Access platform safely from CultureItem after narrowing
+    const platform = !isBook ? (item as CultureItem).platform || '' : 'Book';
 
     return (
       <div 
@@ -146,7 +147,7 @@ const CultureView: React.FC<CultureViewProps> = ({ books = [], cultureItems = []
           <div className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl animate-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
             <div className="relative h-80 bg-gray-100">
               <img 
-                src={'author' in selectedItem ? selectedItem.imageUrl : selectedItem.thumbnailUrl} 
+                src={'author' in selectedItem ? selectedItem.imageUrl : (selectedItem as CultureItem).thumbnailUrl} 
                 className="w-full h-full object-cover" 
                 alt={selectedItem.title} 
               />
@@ -170,9 +171,10 @@ const CultureView: React.FC<CultureViewProps> = ({ books = [], cultureItems = []
                 {selectedItem.description}
               </p>
               <div className="pt-6 flex flex-wrap gap-4">
-                {'mediaUrl' in selectedItem && selectedItem.mediaUrl && (
+                {/* Fix: Safely access mediaUrl using type guard and cast */}
+                {'mediaUrl' in selectedItem && (selectedItem as any).mediaUrl && (
                   <a 
-                    href={selectedItem.mediaUrl} 
+                    href={(selectedItem as any).mediaUrl as string} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex-1 min-w-[150px] bg-white border-2 border-gray-100 text-[#ad46ff] p-4 rounded-2xl font-black text-center shadow-[0_4px_0_#f3f4f6] hover:bg-gray-50 active:translate-y-1 active:shadow-none transition-all uppercase tracking-widest text-xs"
